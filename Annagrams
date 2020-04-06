@@ -1,0 +1,37 @@
+/* What to do?
+Words are called anagrams of each other if one of them can be obtained by rearranging the letters in the other. 
+For example, the word "eat" can be obtained by rearranging the letters of the word "tea", so these words are anagrams of each other. 
+Given a pair of words, check for each of them whether the words of this pair are anagrams of each other.
+*/ 
+
+#include <iostream>
+#include <string>
+#include <map>
+
+using namespace std;
+
+map<char, int> BuildCharCounters(const string& word) {
+  map<char, int> counters;
+  for (char c : word) {
+    ++counters[c];
+  }
+  return counters;
+}
+
+int main() {
+  int n;
+  cin >> n;
+
+  for (int i = 0; i < n; ++i) {
+    string first_word, second_word;
+    cin >> first_word >> second_word;
+    
+    if (BuildCharCounters(first_word) == BuildCharCounters(second_word))
+      cout << "YES" << endl;
+    else
+      cout << "NO" << endl;
+      
+  }
+
+  return 0;
+}
