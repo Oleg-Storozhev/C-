@@ -1,14 +1,3 @@
-/* What to do
-
-Implement a bus storage system. You need to handle the following requests:
-
-NEW_BUS bus stop_count stop1 stop2 ... - add a bus route with the name bus and stop_count stops with the names stop1, stop2, ...
-BUSES_FOR_STOP stop - display the names of all bus routes passing through the stop stop.
-STOPS_FOR_BUS bus - display the names of all bus stops with a list of buses that you can catch at each of the stops.
-ALL_BUSES - list all routes with stops.
-
-*/
-
 #include <iostream>
 #include <string>
 #include <map>
