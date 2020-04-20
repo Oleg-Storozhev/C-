@@ -1,0 +1,918 @@
+#include <iostream>
+#include <ctime>
+#include <conio.h>
+#include <windows.h>
+using namespace std;
+
+// множество состояний одной клетки
+enum CellState { Empty, Deck, Miss, HitDeck };
+
+// множество состояний корабля
+enum ShipState { Destroyed, ShipHit, Safe };
+
+// класс - клетка игрового поля
+class GameBoardCell {
+private:
+	int _x, _y;         // координаты клетки
+	CellState _state;   // состояние клетки
+public:
+	GameBoardCell(int x = 0, int y = 0, CellState state = Empty)
+	{
+		_x = x;
+		_y = y;
+		_state = state;
+	}
+
+	// функция устанавливает x-кординату клети
+	void SetX(int x)
+	{
+		_x = x;
+	}
+
+	// функция устанавливает y-кординату клети
+	void SetY(int y)
+	{
+		_y = y;
+	}
+
+	// функция устанавливает состояние клети
+	void SetState(CellState state)
+	{
+		_state = state;
+	}
+
+	// функция возвращает состояние текуйщей клетки
+	CellState GetState()
+	{
+		return _state;
+	}
+
+	// функция возвращает x текуйщей клетки
+	int GetX()
+	{
+		return _x;
+	}
+
+	// функция возвращает y текуйщей клетки
+	int GetY()
+	{
+		return _y;
+	}
+
+	// функция - проверка попадания в клетку
+	bool TryHit(int x, int y)
+	{
+		return x == _x && y == _y && _state != HitDeck;
+	}
+
+	// функция печати одной клетки, в зависимости от ее состояния
+	void Print()
+	{
+		HANDLE NoName2 = GetStdHandle(STD_OUTPUT_HANDLE);
+		char a = ' ';
+		if (_state == Empty) {
+			cout << ' ';
+		}
+		else if (_state == HitDeck) {
+			SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE);
+			cout << "X";
+			SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+		}
+		else if (_state == Deck) {
+			cout << a;
+		}
+		else {
+			SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED);
+			cout << '*';
+			SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+		}
+	}
+};
+
+class GameBoard;
+
+// класс - корабль
+class Ship
+{
+private:
+	GameBoardCell* _cells;  // клетки корабля
+	ShipState _state;   // состояние корабля
+	int _size;
+public:
+	Ship()
+	{
+		_cells = NULL;
+		_size = 0;
+	}
+
+	void Create(GameBoard& gameBoard, int size, int x, int y, bool horizontal);
+	~Ship();
+
+	// функция вощвращает состояние корабля, выполнив проверку целостности всех палуб
+	ShipState GetState();
+
+	// функция выстрела по корабрю, возвращает состояние корябля, после выстрела
+	void Shoot(GameBoard& gameBoard, int x, int y);
+
+	bool TryHit(int x, int y);
+};
+
+// класс - игровое поле
+class GameBoard {
+private:
+	static const int _size = 10;            // размер игорового поля
+	static const int _4DeckShipCount = 1;   // число 4-х палубных
+	static const int _3DeckShipCount = 2;   // число 3-х палубных
+	static const int _2DeckShipCount = 3;   // число 2-х палубных
+	static const int _1DeckShipCount = 4;   // число 1-х палубных
+	static const int _shipsCount = _4DeckShipCount + _3DeckShipCount + _2DeckShipCount + _1DeckShipCount;   // число кораблей
+	GameBoardCell _cells[_size][_size]; // клетки игрового поля
+	Ship _ships[_shipsCount];   // корабли
+
+	// функция создание игрового поля
+	void Generate();
+public:  
+	GameBoard()
+	{
+		Generate();
+	}
+
+	~GameBoard() { }
+
+	// функция установки статуса клетки игровго поля
+	void SetState(int x, int y, CellState state)
+	{
+		_cells[y][x].SetState(state);
+	}
+
+	// функция возвращает является ли клетка палубой
+	bool IsDeck(int x, int y)
+	{
+		return _cells[y][x].GetState() == Deck || _cells[y][x].GetState() == HitDeck;
+	}
+
+	// функция печати игрового поля
+	void Print();
+
+	// функция возвращает число кдеток игровой области
+	int GetCount()
+	{
+		return _size * _size;
+	}
+
+	// функция возвращает размер игровой области
+	int GetSize()
+	{
+		return _size;
+	}
+
+	// функция - выстрел в игрове поле
+	void Shoot(int x, int y);
+
+	// функция провекри - уничтожены ли все корабли на поле
+	bool AllShipsDestroyed();
+};
+
+int main(int argc, char** argv)
+{
+	int c = 0;
+	int b = 1000;
+	char a = 219;
+	COORD Text;
+
+	COORD NoName;
+	HANDLE NoName2 = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED);
+	srand(time(0));
+	NoName.X = 15;
+	NoName.Y = 1;
+	SetConsoleCursorPosition(NoName2, NoName);
+	for (int u = 0; u < 4; u++) {
+		NoName.X = 14;
+		NoName.Y = u;
+		SetConsoleCursorPosition(NoName2, NoName);
+		cout << a;
+		Sleep(15);
+	}
+	for (int u = 0; u < 4; u++) {
+		NoName.X = 47;
+		NoName.Y = u;
+		SetConsoleCursorPosition(NoName2, NoName);
+		cout << a;
+		Sleep(15);
+	}
+	for (int u = 14; u < 47; u++) {
+		NoName.X = u;
+		NoName.Y = 0;
+		SetConsoleCursorPosition(NoName2, NoName);
+		cout << a;
+		Sleep(15);
+	}
+	for (int u = 14; u < 48; u++) {
+		NoName.X = u;
+		NoName.Y = 4;
+		SetConsoleCursorPosition(NoName2, NoName);
+		cout << a;
+		Sleep(15);
+	}
+	Text.X = 16;
+	Text.Y = 2;
+	SetConsoleCursorPosition(NoName2, Text);
+	Sleep(20);
+	SetConsoleTextAttribute(NoName2, FOREGROUND_RED | FOREGROUND_GREEN);
+	cout << "Press";
+	Text.X = 21;
+	Text.Y = 2;
+	SetConsoleCursorPosition(NoName2, Text);
+	SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_BLUE | FOREGROUND_GREEN);
+	Sleep(20);
+	cout << " \"Enter\"";
+	Text.X = 29;
+	Text.Y = 2;
+	SetConsoleCursorPosition(NoName2, Text);
+	SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+	Sleep(20);
+	cout << " to";
+	Text.X = 32;
+	Text.Y = 2;
+	SetConsoleCursorPosition(NoName2, Text);
+	SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+	Sleep(20);
+	cout << " start";
+	Text.X = 38;
+	Text.Y = 2;
+	SetConsoleCursorPosition(NoName2, Text);
+	SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+	Sleep(20);
+	cout << " the";
+	Text.X = 42;
+	Text.Y = 2;
+	SetConsoleCursorPosition(NoName2, Text);
+	SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE);
+	Sleep(20);
+	cout << " game";
+	Text.X = 20;
+	Text.Y = 20;
+	SetConsoleCursorPosition(NoName2, Text);
+	SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
+
+
+	int key = _getch();
+	while (key != 27) {
+		key = _getch();
+		if (key == 13) {
+
+			system("cls");
+			Text.X = 35;
+			Text.Y = 9;
+			SetConsoleCursorPosition(NoName2, Text);
+			SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED);
+			cout << "Loading...";
+			Text.X = 15;
+			Text.Y = 15;
+			SetConsoleCursorPosition(NoName2, Text);
+			SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
+			for (int u = 20; u < 60; u++) {
+				Text.X = u;
+				Text.Y = 11;
+				SetConsoleCursorPosition(NoName2, Text);
+				cout << a;
+			}
+			for (int u = 20; u < 60; u++) {
+				Text.X = u;
+				Text.Y = 14;
+				SetConsoleCursorPosition(NoName2, Text);
+				cout << a;
+			}
+			for (int u = 11; u < 14; u++) {
+				Text.X = 20;
+				Text.Y = u;
+				SetConsoleCursorPosition(NoName2, Text);
+				cout << a;
+				Sleep(1);
+			}
+			for (int u = 11; u < 15; u++) {
+				Text.X = 60;
+				Text.Y = u;
+				SetConsoleCursorPosition(NoName2, Text);
+				SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
+				cout << a;
+			}
+
+			Text.X = 21;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED);
+			cout << a;
+			Text.X = 21;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(1000);
+
+			Text.X = 22;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 22;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(200);
+
+
+			Text.X = 23;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 23;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(200);
+
+
+			Text.X = 24;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 24;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+			Text.X = 25;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 25;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+			Text.X = 26;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 26;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+			Text.X = 27;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 27;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+			Text.X = 28;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 28;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(250);
+			Text.X = 29;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 29;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(190);
+			Text.X = 30;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 30;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(1000);
+
+			for (int l = 21; l < 33; l++) {
+				Text.X = l;
+				Text.Y = 12;
+				SetConsoleCursorPosition(NoName2, Text);
+				SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+				cout << a;
+			}
+			for (int l = 21; l < 33; l++) {
+				Text.X = l;
+				Text.Y = 13;
+				SetConsoleCursorPosition(NoName2, Text);
+				SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+				cout << a;
+			}
+
+
+			Text.X = 33;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+			cout << a;
+			Text.X = 33;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(1000);
+
+			Text.X = 34;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 34;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(1000);
+
+
+			Text.X = 35;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 35;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(2000);
+
+
+			Text.X = 36;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 36;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+
+			Text.X = 37;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 37;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+
+			Text.X = 38;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 38;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+
+			Text.X = 39;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 39;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+
+			Text.X = 40;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 40;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+
+			Text.X = 41;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 41;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+
+			Text.X = 42;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 42;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+
+			Text.X = 43;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 43;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+
+			Text.X = 44;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 44;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(50);
+
+			Text.X = 45;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 45;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(1000);
+
+			for (int l = 21; l < 47; l++) {
+				Text.X = l;
+				Text.Y = 12;
+				SetConsoleCursorPosition(NoName2, Text);
+				SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+				cout << a;
+			}
+			for (int l = 21; l < 47; l++) {
+				Text.X = l;
+				Text.Y = 13;
+				SetConsoleCursorPosition(NoName2, Text);
+				SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+				cout << a;
+			}
+
+			Text.X = 47;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 47;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(1000);
+
+
+			Text.X = 48;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 48;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(1000);
+
+
+			Text.X = 49;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 49;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(100);
+
+			Text.X = 50;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 50;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(500);
+
+			Text.X = 51;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 51;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(1000);
+
+			Text.X = 52;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 52;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(1000);
+
+			Text.X = 53;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 53;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(900);
+
+			Text.X = 54;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 54;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(100);
+
+			Text.X = 55;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 55;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(500);
+
+			Text.X = 56;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 56;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(100);
+
+			Text.X = 57;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 57;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(4000);
+
+			Text.X = 58;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 58;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(5000);
+
+			Text.X = 59;
+			Text.Y = 12;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Text.X = 59;
+			Text.Y = 13;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << a;
+			Sleep(1);
+
+			Text.X = 25;
+			Text.Y = 16;
+			SetConsoleCursorPosition(NoName2, Text);
+			cout << "Press \"Enter\" to contain";
+
+			int key = _getch();
+			while (key != 27) {
+				key = _getch();
+				if (key == 13) {
+					system("cls");
+
+					GameBoard gameBoard;
+					gameBoard.Print();
+					do {
+						SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+						cout << "Enter ";
+						SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED);
+						cout << "X:\n  ";
+						SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+						int x;
+						cin >> x;
+						cout << "Enter ";
+						SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED);
+						cout << "Y:\n  ";
+						SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+						int y;
+						cin >> y;
+						while(x > 9 || x < 0 || y > 9|| y < 0){ 
+							system("cls");
+							gameBoard.Print();
+							SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+							cout << "Enter";
+							SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED);
+							cout << "X:\n  ";
+							cin >> x;
+							SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+							cout << "Enter";
+							SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED);
+							cout << "Y:\n  ";
+							cin >> y;
+						}
+						gameBoard.Shoot(x, y);
+						system("cls");
+						gameBoard.Print();
+					} while (!gameBoard.AllShipsDestroyed());
+					return 0;
+				}
+			}
+		}
+	}
+}
+
+
+void Ship::Create(GameBoard& gameBoard, int size, int x, int y, bool horizontal)
+{
+	_size = size;
+	_cells = new GameBoardCell[size];
+	// заполняем клетки в зависимости от начала координат корябля и его направления
+	for (int i = 0; i < size; i++)
+	{
+		if (horizontal) {
+			_cells[i].SetX(x + i);
+			_cells[i].SetY(y);
+			gameBoard.SetState(x + i, y, Deck);
+		}
+		else {
+			_cells[i].SetX(x);
+			_cells[i].SetY(y + i);
+			gameBoard.SetState(x, y + i, Deck);
+		}
+	}
+}
+
+Ship::~Ship()
+{
+	// очистим память, если она была выделена.
+	if (_size)
+		delete _cells;
+}
+
+ShipState Ship::GetState()
+{
+	// считаем число попаданий
+	int hitCount = 0;
+	for (int i = 0; i < _size; i++)
+		if (_cells[i].GetState() == HitDeck)
+			hitCount++;
+
+	// сверяем число попаданий с числом палуб
+	if (hitCount == 0)  // если не попали - корабль цел
+		_state = Safe;
+	else if (hitCount < _size)  // если попали но меньше раз, чем число палуб, то ранен
+		_state = ShipHit;
+	else
+		_state = Destroyed; // иначе уничтожен
+
+	return _state;
+}
+
+void Ship::Shoot(GameBoard& gameBoard, int x, int y)
+{
+	for (int i = 0; i < _size; i++)
+		if (_cells[i].TryHit(x, y))
+		{
+			_cells[i].SetState(HitDeck);
+			gameBoard.SetState(x, y, HitDeck);
+			break;
+		}
+	if (GetState() == Destroyed)
+	{
+		for (int i = 0; i < _size; i++)
+		{
+			int localX = _cells[i].GetX();
+			int localY = _cells[i].GetY();
+			if (localX - 1 >= 0 && localY - 1 >= 0 && !gameBoard.IsDeck(localX - 1, localY - 1))
+				gameBoard.SetState(localX - 1, localY - 1, Miss);
+			if (localX - 1 >= 0 && !gameBoard.IsDeck(localX - 1, localY))
+				gameBoard.SetState(localX - 1, localY, Miss);
+			if (localX - 1 >= 0 && localY + 1 < gameBoard.GetSize() && !gameBoard.IsDeck(localX - 1, localY + 1))
+				gameBoard.SetState(localX - 1, localY + 1, Miss);
+
+			if (localY - 1 >= 0 && !gameBoard.IsDeck(localX, localY - 1))
+				gameBoard.SetState(localX, localY - 1, Miss);
+			if (localY + 1 < gameBoard.GetSize() && !gameBoard.IsDeck(localX, localY + 1))
+				gameBoard.SetState(localX, localY + 1, Miss);
+
+			if (localX + 1 < gameBoard.GetSize() && localY - 1 >= 0 && !gameBoard.IsDeck(localX + 1, localY - 1))
+				gameBoard.SetState(localX + 1, localY - 1, Miss);
+			if (localX + 1 < gameBoard.GetSize() && !gameBoard.IsDeck(localX + 1, localY))
+				gameBoard.SetState(localX + 1, localY, Miss);
+			if (localX + 1 < gameBoard.GetSize() && localY + 1 < gameBoard.GetSize() && !gameBoard.IsDeck(localX + 1, localY + 1))
+				gameBoard.SetState(localX + 1, _cells[i].GetY() + 1, Miss);
+		}
+	}
+}
+
+bool Ship::TryHit(int x, int y)
+{
+	for (int i = 0; i < _size; i++)
+		if (_cells[i].TryHit(x, y))
+			return true;
+	return false;
+}
+
+void GameBoard::Generate()
+{
+	// заполняем игровое поле пустыми клетками
+	for (int i = 0; i < _size; i++)
+		for (int j = 0; j < _size; j++)
+			_cells[i][j].SetState(Empty);
+	int idx = 0;
+
+	// расставяем 4-х палубные
+	_ships[idx++].Create(*this, 4, 0, 0, true);
+	// расставяем 3-х палубные
+	_ships[idx++].Create(*this, 3, 0, 2, false);
+	_ships[idx++].Create(*this, 3, 8, 1, false);
+	// расставяем 2-х палубные
+	_ships[idx++].Create(*this, 2, 3, 9, true);
+	_ships[idx++].Create(*this, 2, 2, 6, true);
+	_ships[idx++].Create(*this, 2, 6, 5, true);
+	// расставяем 1-х палубные
+	_ships[idx++].Create(*this, 1, 4, 2, true);
+	_ships[idx++].Create(*this, 1, 8, 8, true);
+	_ships[idx++].Create(*this, 1, 0, 8, true);
+	_ships[idx++].Create(*this, 1, 6, 0, true);
+}
+
+void GameBoard::Print()
+{
+
+	HANDLE NoName2 = GetStdHandle(STD_OUTPUT_HANDLE);
+	int num = 0;
+	cout << "  ";
+	SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED);
+	for (int a = 0; a < _size; a++) {
+		Sleep(10);
+		cout << " " << num;
+		num++;
+	}
+	cout << "\n";
+	num = 0;
+	for (int i = 0; i < _size; i++)
+	{
+		SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_RED);
+		cout << num++;
+		SetConsoleTextAttribute(NoName2, FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+		cout << " |";
+		for (int j = 0; j < _size; j++) {
+			Sleep(10);
+			_cells[i][j].Print();
+			cout << "|";
+		}
+		cout << endl;
+	}
+}
+
+void GameBoard::Shoot(int x, int y)
+{
+	// просмотрим все корабли
+	for (int i = 0; i < _shipsCount; i++)
+		// проверим попадание
+		if (_ships[i].TryHit(x, y))
+		{
+			// если попадаем - стреляем по кораблю
+			_ships[i].Shoot(*this, x, y);
+			break;
+		}
+		else
+		{
+			// иначе засчитываем промах
+			_cells[y][x].SetState(Miss);
+		}
+}
+
+bool GameBoard::AllShipsDestroyed()
+{
+	// обход всех кораблей
+	for (int i = 0; i < _shipsCount; i++)
+		// если хотя бы один не уничтожен, вернем false
+		if (_ships[i].GetState() != Destroyed)
+			return false;
+	return true;    // иначе true
+}
