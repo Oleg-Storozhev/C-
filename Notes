@@ -1,0 +1,87 @@
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <string>
+#include <map>
+using namespace std;
+
+void ShowCommands() {
+	cout << "If you want to add note write: Add \"name\" \"note\"\nIf you want to change the note write: Add \"name\" \"new note\"\nIf you want to delete the note write: Del \"name\"\n\n";
+}
+
+class Database {
+public:
+	void AddNote(const string& name, const string& add_note) {
+		Note[name] = add_note;
+	}
+	bool DeleteNote(const string& delete_note) {
+		for (auto i: Note) {
+			if (i.first == delete_note) {
+				Note.erase(delete_note);
+				return true;
+			}
+		}
+		return false;
+	}
+	void PrintNotes() const {
+		int count = 1;
+		for (auto i : Note) {
+			cout << count << ") " << i.first << ":\n";
+			cout << i.second << "\n";
+			count++;
+		}
+		cout << "\n";
+	}
+private:
+	map <string, string> Note;
+};
+
+int main() {
+	try {
+		Database db;
+		string command;
+		ShowCommands();
+		while (getline(cin, command)) {
+			if (command == "")
+				continue;
+			stringstream input(command);
+			string task;
+			input >> task;
+			system("cls");
+			if (task == "Add" || task == "add" || task == "ADD") {
+				string name, note, all_note = "";
+				input >> name;
+				while (!input.eof()) {
+					input >> note;
+					all_note += note + " ";
+				}
+				db.AddNote(name, all_note);
+				cout << "Your note was added on!\n";
+			}
+			else if (task == "Commands" || task == "commands") {
+				ShowCommands();
+			}
+			else if (task == "Del" || task == "del" || task == "DEL") {
+				string name;
+				input >> name;
+				if (db.DeleteNote(name) == true) {
+					cout << "Your note was deleted!\n";
+				}
+				else {
+					cout << "Here is no note with this name\n";
+				}
+			}
+			else {
+				cout << "Unknown command: " << command << endl;
+				cout << "if you forgot the commands write \"commands\"\n";
+			}
+			cout << "Your notes list:\n\n";
+			db.PrintNotes();
+		}
+	}
+	catch (exception& s) {
+		cout << s.what() << endl;
+		return 0;
+	}
+	return 0;
+}
