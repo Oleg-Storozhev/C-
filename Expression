@@ -1,0 +1,9 @@
+/*
+You need to implement a function that takes two pointers to the Expression base class as an input, and returns true if both pointers actually point to objects of the same class, and false otherwise (i.e. if both pointers point to BinaryOperation, then true is returned, and if one of them points to Number, and the second to BinaryOperation, then false).
+
+Implementation requirements: typeid and dynamic_cast are not allowed. Calling methods on the passed pointers is prohibited.
+*/
+
+bool check_equals(Expression const *left, Expression const *right){
+    return ((void(*(*(&)[2]))(const Expression&))left)[0][0] == ((void(*(*(&)[2]))(const Expression&))right)[0][0];
+}
