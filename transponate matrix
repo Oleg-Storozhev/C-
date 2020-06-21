@@ -1,0 +1,20 @@
+/*
+
+Write a function that takes an input integer matrix MM (in other words, just a two-dimensional integer array) of size rows × cols, and returns the transposed matrix M ^ T
+  (also a two-dimensional integer array) of size cols × rows. If in M at the intersection of the second row and the jth column there was a number x, then at the intersection of the second row and the second column in the matrix M ^ T
+  the number xx will also stand, or in other words M ^ T [j] [i] = M [i] [j]
+
+Please note that you do not know exactly how the memory was allocated for the MM array. Allocate memory for an M ^ T array
+  You can in any way convenient for you. You cannot change the original matrix.
+*/
+
+int ** transpose(const int * const * m, unsigned rows, unsigned cols){
+    int **a = new int *[cols];
+    for(int i = 0; i < cols; i++){
+        a[i] = new int [rows];
+        for(int j = 0; j < rows; j++){
+            a[i][j] = m[j][i];
+        }
+    }
+    return a;
+}
